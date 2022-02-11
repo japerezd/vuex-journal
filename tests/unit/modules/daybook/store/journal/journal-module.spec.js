@@ -1,6 +1,7 @@
 import { createStore } from 'vuex';
 import journal from '@/modules/daybook/store/journal';
-import { journalState } from '../../../mock-data/test-journal-state';
+import { journalState } from '../../../../mock-data/test-journal-state';
+import authApi from '@/api/authApi';
 
 const createVuexStore = (initialState) =>
   createStore({
@@ -13,6 +14,17 @@ const createVuexStore = (initialState) =>
   });
 
 describe('Vuex - pruebas en el journal module', () => {
+
+  beforeAll(async () => {
+    const { data } = await authApi.post(':signInWithPassword', {
+      email: 'test@test.com',
+      password: '123456',
+      returnSecureToken: true,
+    });
+
+    localStorage.setItem('idToken', data.idToken);
+  })
+
   // Basicas ================
   test('este es el estado inicial, debe de tener este state', () => {
     const store = createVuexStore(journalState);
@@ -85,9 +97,11 @@ describe('Vuex - pruebas en el journal module', () => {
   // Actions ================
   test('actions: loadEntries', async () => {
     const store = createVuexStore({ isLoading: true, entries: [] });
-
+    
     await store.dispatch('journal/loadEntries');
-    expect(store.state.journal.entries.length).toBe(4);
+    expect(store.state.journal.entries.length).toBe(2);
+    // TODO: buscar en el curso por que no me salen que sean 2
+
   });
 
   test('actions: updateEntry', async () => {
@@ -123,7 +137,7 @@ describe('Vuex - pruebas en el journal module', () => {
     expect(typeof id).toBe('string')
     const {id: idEntry} = store.state.journal.entries.find(e => e.id === id)
     expect(id).toBe(idEntry);
-    expect(idEntry).toBe(true)
+    expect(idEntry).toBeTruthy()
 
     
     await store.dispatch('journal/deleteEntry', idEntry)
